@@ -1,6 +1,8 @@
 package com.adi3000.code.synch.redminetrello.data;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
@@ -14,13 +16,15 @@ import org.trello4j.TrelloImpl;
 import org.trello4j.model.Card;
 
 import com.adi3000.code.synch.redminetrello.model.IssueCard;
+import com.taskadapter.redmineapi.Include;
+import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.RedmineManagerFactory;
 import com.taskadapter.redmineapi.bean.Issue;
 
 @Service
 public class SynchService {
-	
+
 	@Inject
 	private IssueCardDAO issueCardDAO;
 	@Value("${redmine.url}")
@@ -34,12 +38,13 @@ public class SynchService {
 
 	private Trello trello;
 	private RedmineManager redmine;
+
 	@PostConstruct
 	public void initConnections(){
-		trello = new TrelloImpl(trelloApiAccessKey, trelloToken);  
+		trello = new TrelloImpl(trelloApiAccessKey, trelloToken);
 		redmine = RedmineManagerFactory.createWithApiKey(redmineUrl, redmineApiAccessKey);
 	}
-	
+
 	@Transactional
 	public IssueCard getIssueCard(String cardId){
 		return issueCardDAO.getIssueCardByCard(cardId);
@@ -55,9 +60,32 @@ public class SynchService {
 		Card card = trello.createCard(idList, issue.getSubject(), cardMap);
 		return card;
 	}
-	
-	public void moveToList(Card card) {
-		
+
+	public Card updateCard(Card card) {
+		Map<String, String> keyValueMap = new HashMap<String, String>();
+		keyValueMap.put("id", card.getId());
+		keyValueMap.put("idList", card.getIdList());
+		keyValueMap.put("desc", card.getDesc());
+		return trello.updateCard(card.getId(), keyValueMap);
+	}
+	public Card getCard(String cardId) {
+		return trello.getCard(cardId);
+	}
+	public Issue getIssue(Integer issueId) {
+		try {
+			return redmine.getIssueManager().getIssueById(issueId, null);
+		} catch (RedmineException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	public List<Issue> getIssuesFromQuery(String projectId, Integer queryId) {
+		try {
+			return redmine.getIssueManager().getIssues(projectId, queryId, null);
+		} catch (RedmineException e) {
+			e.printStackTrace();
+			return Collections.EMPTY_LIST;
+		}
 	}
 
 }
