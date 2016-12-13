@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.adi3000.code</groupId>
 	<artifactId>synch-redmine-trello</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.1-SNAPSHOT</version>
 	<properties>
 		<log4j.version>2.6.1</log4j.version>
 		<spring.framework.version>4.2.5.RELEASE</spring.framework.version>
@@ -83,6 +83,11 @@
 			<groupId>javax.inject</groupId>
 			<artifactId>javax.inject</artifactId>
 			<version>1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.liquibase</groupId>
+			<artifactId>liquibase-core</artifactId>
+			<version>3.5.1</version>
 		</dependency>
 	</dependencies>
 	<build>

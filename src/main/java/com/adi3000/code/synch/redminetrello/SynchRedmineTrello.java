@@ -13,25 +13,22 @@ import com.adi3000.code.synch.redminetrello.data.SynchService;
 import com.adi3000.code.synch.redminetrello.model.IssueCard;
 import com.adi3000.code.synch.redminetrello.model.QueryList;
 import com.adi3000.code.synch.redminetrello.model.VersionDashoboard;
+import com.adi3000.code.synch.redminetrello.model.VersionLabel;
 import com.taskadapter.redmineapi.bean.Issue;
 
 public class SynchRedmineTrello {
 	private static final int fileArgumentPosition = 0;
 
 	public static void main(String[] args)  {
-		ApplicationContext context = new ClassPathXmlApplicationContext("spring-context.xml");
 		String pathPropertyFile = args[fileArgumentPosition];
-		SynchService synchService = context.getBean(SynchService.class);
 		System.setProperty("redminetrello.property.file", new File(pathPropertyFile).toURI().toString());
+		ApplicationContext context = new ClassPathXmlApplicationContext("spring-context.xml");
+		SynchService synchService = context.getBean(SynchService.class);
 
-		String redmineApiAccessKey = context.getEnvironment().getProperty("redmine.apiKey");
-		String uri = context.getEnvironment().getProperty("redmine.url");
-		String trelloApiAccessKey =  context.getEnvironment().getProperty("trello.apiKey");
-		String trelloToken = context.getEnvironment().getProperty("trello.token");
 		String projectKey = "ofl";
 
 		VersionDashoboard versionDashoboard = new VersionDashoboard();
-		versionDashoboard.setVersion(143);
+		versionDashoboard.setVersionId(143);
 		versionDashoboard.setDashboardId("56e18e4451da4da4db599a0b");
 
 
@@ -41,6 +38,7 @@ public class SynchRedmineTrello {
 		queryListEntry = new QueryList();
 		queryListEntry.setListId("56e18e4e2108edf8af2a0e96");
 		queryListEntry.setQueryId(102);
+		queryLists.add(queryListEntry);
 
 		//TODO
 		queryListEntry = new QueryList();
@@ -71,11 +69,10 @@ public class SynchRedmineTrello {
 			for (Issue issue : issues) {
 				issueCard = synchService.getIssueCard(issue.getId());
 				if(issueCard == null){
-					card = synchService.createCard(issue, queryList.getListId());
+					card = synchService.createCard(issue, queryList.getListId(), versionDashoboard.getDashboardId());
 				}else{
 					card = synchService.getCard(issueCard.getCardId());
-					card.setIdList(queryList.getListId());
-					synchService.updateCard(card);
+					synchService.updateCard(card, issue, queryList.getListId(), versionDashoboard.getDashboardId());
 				}
 			}
 		}

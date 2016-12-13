@@ -1,0 +1,60 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd
+    http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+	<changeSet id="trellosynch-0.1-createInitialTable"
+		author="adi3000">
+
+		<createTable tableName="ISSUE_CARD">
+			<column type="integer" name="IC_ID" autoIncrement="true"></column>
+			<column type="integer" name="ISSUE_ID"></column>
+			<column type="varchar(255)" name="CARD_ID"></column>
+			<column type="varchar(255)" name="LAST_TRELLO_ACTION"></column>
+			<column type="varchar(255)" name="LAST_REDMINE_UPDATE"></column>
+		</createTable>
+
+		<createTable tableName="VERSION_LABEL">
+			<column type="integer" name="VL_ID" autoIncrement="true"></column>
+			<column type="integer" name="VERSION_ID" ></column>
+			<column type="varchar(255)" name="LABEL_ID" ></column>
+		</createTable>
+
+		<createTable tableName="QUERY_LIST">
+			<column type="integer" name="QL_ID" autoIncrement="true"></column>
+			<column type="integer" name="QUERY_ID"></column>
+			<column type="varchar(255)" name="LIST_ID"></column>
+		</createTable>
+
+		<createTable tableName="VERSION_DASHBOARD">
+			<column type="integer" name="VD_ID" autoIncrement="true"></column>
+			<column type="integer" name="VERSION_ID"></column>
+			<column type="varchar(255)" name="DASHBOARD_ID"></column>
+		</createTable>
+
+	</changeSet>
+
+	<changeSet id="trellosynch-0.1-pkForInitialTable"
+		author="adi3000">
+		<addPrimaryKey columnNames="IC_ID" constraintName="PK_ISSUE_CARD_ID"
+			tableName="ISSUE_CARD" />
+
+		<addPrimaryKey columnNames="VL_ID" constraintName="PK_VERSION_LABEL_ID"
+			tableName="VERSION_LABEL" />
+
+		<addPrimaryKey columnNames="QL_ID" constraintName="PK_QUERY_LIST_ID"
+			tableName="QUERY_LIST" />
+
+		<addPrimaryKey columnNames="VD_ID" constraintName="PK_VERSION_DASHBOARD_ID"
+			tableName="VERSION_DASHBOARD" />
+
+	</changeSet>
+	<changeSet id="trellosynch-0.1-sequenceForInitialTable"
+		author="adi3000">
+		<createSequence sequenceName="issue_card_id_seq" incrementBy="1"/>
+		<createSequence sequenceName="query_list_id_seq" incrementBy="1"/>
+		<createSequence sequenceName="version_dashboard_id_seq" incrementBy="1"/>
+		<createSequence sequenceName="version_label_id_seq" incrementBy="1"/>
+
+	</changeSet>
+</databaseChangeLog>
