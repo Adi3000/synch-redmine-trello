@@ -194,30 +194,6 @@ public class SynchService {
 		return trello.updateCard(card.getId(), keyValueMap);
 	}
 
-	private StringBuilder addToList(StringBuilder initialString, String toAdd){
-		if(initialString == null || initialString.length() == 0){
-			return new StringBuilder(toAdd);
-		}else if(initialString.indexOf(toAdd)>=0){
-			return initialString.append(",").append(toAdd);
-		}else {
-			return initialString;
-		}
-	}
-
-	private String toString(List<String> list){
-		if(list != null){
-			StringBuilder sb = new StringBuilder();
-			boolean first = true;
-			for(String item : list){
-				if(!first){
-					sb.append(",");
-				}
-				sb.append(item);
-			}
-			return sb.toString();
-		}
-		return null;
-	}
 
 	public Card getCard(String cardId) {
 		return trello.getCard(cardId);

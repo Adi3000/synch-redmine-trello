@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.trello4j.model.Card;
 
@@ -13,7 +14,6 @@ import com.adi3000.code.synch.redminetrello.data.SynchService;
 import com.adi3000.code.synch.redminetrello.model.IssueCard;
 import com.adi3000.code.synch.redminetrello.model.QueryList;
 import com.adi3000.code.synch.redminetrello.model.VersionDashoboard;
-import com.adi3000.code.synch.redminetrello.model.VersionLabel;
 import com.taskadapter.redmineapi.bean.Issue;
 
 public class SynchRedmineTrello {
@@ -81,6 +81,7 @@ public class SynchRedmineTrello {
 				}
 			}
 		}
+		((ConfigurableApplicationContext)context).close();
 	}
 
 }
