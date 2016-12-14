@@ -29,7 +29,7 @@ public class SynchRedmineTrello {
 
 		VersionDashoboard versionDashoboard = new VersionDashoboard();
 		versionDashoboard.setVersionId(143);
-		versionDashoboard.setDashboardId("56e18e4451da4da4db599a0b");
+		versionDashoboard.setDashboardId("<push-dashboard-id-here>");
 
 
 		List<QueryList> queryLists = new ArrayList<QueryList>();
