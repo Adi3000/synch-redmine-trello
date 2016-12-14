@@ -2,8 +2,10 @@ package com.adi3000.code.synch.redminetrello.data;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -16,11 +18,14 @@ import org.trello4j.model.Card;
 import org.trello4j.model.Label;
 
 import com.adi3000.code.synch.redminetrello.model.IssueCard;
+import com.adi3000.code.synch.redminetrello.model.UserMember;
+import com.adi3000.code.synch.redminetrello.model.ValueLabel;
 import com.adi3000.code.synch.redminetrello.model.VersionLabel;
 import com.taskadapter.redmineapi.Include;
 import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.RedmineManagerFactory;
+import com.taskadapter.redmineapi.bean.CustomField;
 import com.taskadapter.redmineapi.bean.Issue;
 import com.taskadapter.redmineapi.bean.Version;
 
@@ -31,6 +36,8 @@ public class SynchService {
 	private IssueCardDAO issueCardDAO;
 	@Inject
 	private VersionLabelDAO versionLabelDAO;
+	@Inject
+	private ValueLabelDAO valueLabelDAO;
 	@Value("${redmine.url}")
 	private String redmineUrl;
 	@Value("${redmine.apiKey}")
@@ -39,6 +46,10 @@ public class SynchService {
 	private String trelloApiAccessKey;
 	@Value("${trello.token}")
 	private String trelloToken;
+	@Value("#{'${redminetrello.customFieldsIds}'.split(',')}")
+	private List<String> customFieldsIds;
+	@Inject
+	private UserMemberDAO userMemberDAO;
 
 	private Trello trello;
 	private RedmineManager redmine;
@@ -63,17 +74,48 @@ public class SynchService {
 		Map<String, String> cardMap = new HashMap<String,String>();
 		cardMap.put("name",String.format("[%d]%s", issue.getId(), issue.getSubject()));
 		cardMap.put("desc",String.format("%s/issues/%s\n%s", redmineUrl,issue.getId(), issue.getDescription()));
+		Set<String> idLabels = new HashSet<String>();
+		ValueLabel valueLabel = null;
+		//Affect version as label
 		if(issue.getTargetVersion() != null){
 			VersionLabel versionLabel = getVersionLabel(issue.getTargetVersion(), idBoard);
-			cardMap.put("idLabels", versionLabel.getLabelId());
+			idLabels.add(versionLabel.getLabelId());
 		}
+		//affect
+		if(issue.getAssigneeId() != null){
+			UserMember userMember=userMemberDAO.getUserMemberByUser(issue.getAssigneeId());
+			if(userMember != null){
+				cardMap.put("idMembers", userMember.getMemberId());
+			}
+		}
+		// Adding label
+		if(customFieldsIds != null){
+			CustomField customField = null;
+			for(String customFieldId : customFieldsIds){
+				customField = issue.getCustomFieldById(Integer.valueOf(customFieldId).intValue());
+				if(customField != null){
+					valueLabel = getValueLabel(customField.getValue(),idBoard);
+					idLabels.add(valueLabel.getLabelId());
+				}
+			}
+		}
+		// Adding category as label
+		if(issue.getCategory() != null){
+			valueLabel = getValueLabel(issue.getCategory().getName(),idBoard);
+			idLabels.add(valueLabel.getLabelId());
+		}
+		cardMap.put("idLabels", idLabels.toString());
+		//Submit and save all info
 		Card card = trello.createCard(idList, issue.getSubject(), cardMap);
 		IssueCard issueCard = new IssueCard();
 		issueCard.setCardId(card.getId());
 		issueCard.setIssueId(issue.getId());
 		issueCard.setLastRedmineUpdate(issue.getUpdatedOn());
 		issueCardDAO.save(issueCard);
-		return card;
+		for(String idLabel : idLabels){
+			trello.addLabelToCard(card.getId(), idLabel);
+		}
+		return trello.getCard(card.getId());
 	}
 
 	private VersionLabel getVersionLabel(Version version, String boardId) {
@@ -87,21 +129,96 @@ public class SynchService {
 		}
 		return versionLabel;
 	}
+	private ValueLabel getValueLabel(String value, String boardId) {
+		ValueLabel valueLabel = valueLabelDAO.getValueLabelByValue(value);
+		if(valueLabel == null){
+			Label label = trello.createLabel(value, boardId, null);
+			valueLabel = new ValueLabel();
+			valueLabel.setLabelId(label.getId());
+			valueLabel.setValueName(value);
+			valueLabelDAO.save(valueLabel);
+		}
+		return valueLabel;
+	}
 
 	@Transactional
 	public Card updateCard(Card card, Issue issue, String listId, String idBoard) {
 		card.setIdList(listId);
 		Map<String, String> keyValueMap = new HashMap<String, String>();
-		keyValueMap.put("id", card.getId());
+		Set<String> idLabels = new HashSet<String>();
+		Set<String> existingLabels = new HashSet<String>();
+		ValueLabel valueLabel = null;
+		if(card.getLabels() != null){
+			for (Label label : card.getLabels()){
+				existingLabels.add(label.getId());
+			}
+		}
 		keyValueMap.put("name",String.format("[%d]%s", issue.getId(), issue.getSubject()));
 		keyValueMap.put("idList", card.getIdList());
 		keyValueMap.put("desc", card.getDesc());
 		if(issue.getTargetVersion() != null){
 			VersionLabel versionLabel = getVersionLabel(issue.getTargetVersion(), idBoard);
-			keyValueMap.put("idLabels", versionLabel.getLabelId());
+			if(!existingLabels.contains(versionLabel.getLabelId())){
+				idLabels.add(versionLabel.getLabelId());
+			}
+		}
+		if(issue.getAssigneeId() != null){
+			UserMember userMember=userMemberDAO.getUserMemberByUser(issue.getAssigneeId());
+			if(userMember != null){
+				keyValueMap.put("idMembers", userMember.getMemberId());
+			}
+		}
+		// Adding label
+		if(customFieldsIds != null){
+			CustomField customField = null;
+			for(String customFieldId : customFieldsIds){
+				customField = issue.getCustomFieldById(Integer.valueOf(customFieldId).intValue());
+				if(customField != null){
+					valueLabel = getValueLabel(customField.getValue(),idBoard);
+					if(!existingLabels.contains(valueLabel.getLabelId())){
+						idLabels.add(valueLabel.getLabelId());
+					}
+				}
+			}
+		}
+		// Adding category as label
+		if(issue.getCategory() != null){
+			valueLabel = getValueLabel(issue.getCategory().getName(),idBoard);
+			if(!existingLabels.contains(valueLabel.getLabelId())){
+				idLabels.add(valueLabel.getLabelId());
+			}
+		}
+		for(String idLabel : idLabels){
+			trello.addLabelToCard(card.getId(), idLabel);
 		}
 		return trello.updateCard(card.getId(), keyValueMap);
 	}
+
+	private StringBuilder addToList(StringBuilder initialString, String toAdd){
+		if(initialString == null || initialString.length() == 0){
+			return new StringBuilder(toAdd);
+		}else if(initialString.indexOf(toAdd)>=0){
+			return initialString.append(",").append(toAdd);
+		}else {
+			return initialString;
+		}
+	}
+
+	private String toString(List<String> list){
+		if(list != null){
+			StringBuilder sb = new StringBuilder();
+			boolean first = true;
+			for(String item : list){
+				if(!first){
+					sb.append(",");
+				}
+				sb.append(item);
+			}
+			return sb.toString();
+		}
+		return null;
+	}
+
 	public Card getCard(String cardId) {
 		return trello.getCard(cardId);
 	}

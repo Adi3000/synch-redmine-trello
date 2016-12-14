@@ -57,4 +57,30 @@
 		<createSequence sequenceName="version_label_id_seq" incrementBy="1"/>
 
 	</changeSet>
+	<changeSet id="trellosynch-0.1-userMemberSynch"
+		author="adi3000">
+		<createTable tableName="USER_MEMBER">
+			<column type="integer" name="UM_ID" autoIncrement="true"></column>
+			<column type="integer" name="USER_ID" ></column>
+			<column type="varchar(255)" name="MEMBER_ID" ></column>
+		</createTable>
+
+		<addPrimaryKey columnNames="UM_ID" constraintName="PK_USER_MEMBER_ID"
+			tableName="USER_MEMBER" />
+
+		<createSequence sequenceName="user_member_seq" incrementBy="1"/>
+	</changeSet>
+	<changeSet id="trellosynch-0.1-valueLabel"
+		author="adi3000">
+		<createTable tableName="VALUE_LABEL">
+			<column type="integer" name="VLL_ID" autoIncrement="true"></column>
+			<column type="varchar(255)" name="VALUE_NAME" ></column>
+			<column type="varchar(255)" name="LABEL_ID" ></column>
+		</createTable>
+
+		<addPrimaryKey columnNames="VLL_ID" constraintName="PK_VALUE_LABEL_ID"
+			tableName="VALUE_LABEL" />
+
+		<createSequence sequenceName="value_label_id_seq" incrementBy="1"/>
+	</changeSet>
 </databaseChangeLog>

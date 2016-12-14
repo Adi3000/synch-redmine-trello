@@ -45,5 +45,7 @@
 	<bean id="synchService" class="com.adi3000.code.synch.redminetrello.data.SynchService"></bean>
 	<bean id="issueCardDao" class="com.adi3000.code.synch.redminetrello.data.IssueCardDAO"></bean>
 	<bean id="versionLabelDao" class="com.adi3000.code.synch.redminetrello.data.VersionLabelDAO"></bean>
+	<bean id="userMemberDao" class="com.adi3000.code.synch.redminetrello.data.UserMemberDAO"></bean>
+	<bean id="valueLabelDao" class="com.adi3000.code.synch.redminetrello.data.ValueLabelDAO"></bean>
 
 </beans>

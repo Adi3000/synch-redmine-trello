@@ -67,12 +67,17 @@ public class SynchRedmineTrello {
 		for(QueryList queryList: queryLists ){
 			issues = synchService.getIssuesFromQuery(projectKey, queryList.getQueryId());
 			for (Issue issue : issues) {
-				issueCard = synchService.getIssueCard(issue.getId());
-				if(issueCard == null){
-					card = synchService.createCard(issue, queryList.getListId(), versionDashoboard.getDashboardId());
-				}else{
-					card = synchService.getCard(issueCard.getCardId());
-					synchService.updateCard(card, issue, queryList.getListId(), versionDashoboard.getDashboardId());
+				try{
+					issueCard = synchService.getIssueCard(issue.getId());
+					if(issueCard == null){
+						card = synchService.createCard(issue, queryList.getListId(), versionDashoboard.getDashboardId());
+					}else{
+						card = synchService.getCard(issueCard.getCardId());
+						synchService.updateCard(card, issue, queryList.getListId(), versionDashoboard.getDashboardId());
+					}
+				}catch(Exception e){
+					System.err.println(String.format("%s cannot be updated with issue %s", card, issue.getId()));
+					e.printStackTrace();
 				}
 			}
 		}
