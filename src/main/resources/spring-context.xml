@@ -47,5 +47,6 @@
 	<bean id="versionLabelDao" class="com.adi3000.code.synch.redminetrello.data.VersionLabelDAO"></bean>
 	<bean id="userMemberDao" class="com.adi3000.code.synch.redminetrello.data.UserMemberDAO"></bean>
 	<bean id="valueLabelDao" class="com.adi3000.code.synch.redminetrello.data.ValueLabelDAO"></bean>
+	<bean id="queryListDao" class="com.adi3000.code.synch.redminetrello.data.QueryListDAO"></bean>
 
 </beans>

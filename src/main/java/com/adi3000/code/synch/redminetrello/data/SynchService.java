@@ -1,5 +1,6 @@
 package com.adi3000.code.synch.redminetrello.data;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -104,7 +105,7 @@ public class SynchService {
 			valueLabel = getValueLabel(issue.getCategory().getName(),idBoard);
 			idLabels.add(valueLabel.getLabelId());
 		}
-		cardMap.put("idLabels", idLabels.toString());
+		cardMap.put("idLabels", transformIdLabels(idLabels));
 		//Submit and save all info
 		Card card = trello.createCard(idList, issue.getSubject(), cardMap);
 		IssueCard issueCard = new IssueCard();
@@ -116,6 +117,22 @@ public class SynchService {
 			trello.addLabelToCard(card.getId(), idLabel);
 		}
 		return trello.getCard(card.getId());
+	}
+
+	private String transformIdLabels(Collection<String> idLabels){
+		if(idLabels == null){
+			return null;
+		}
+		StringBuilder sb = new StringBuilder();
+		boolean first = true;
+		for(String id: idLabels){
+			if(!first){
+				sb.append(",");
+			}
+			first = false;
+			sb.append(id);
+		}
+		return sb.toString();
 	}
 
 	private VersionLabel getVersionLabel(Version version, String boardId) {
