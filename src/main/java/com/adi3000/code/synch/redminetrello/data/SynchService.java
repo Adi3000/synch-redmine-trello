@@ -49,6 +49,10 @@ public class SynchService {
 	private String trelloToken;
 	@Value("#{'${redminetrello.customFieldsIds}'.split(',')}")
 	private List<String> customFieldsIds;
+	@Value("${redminetrello.trelloDashboard}")
+	private String dashboard;
+	@Value("${redminetrello.redmineProject:@null}")
+	private String project;
 	@Inject
 	private UserMemberDAO userMemberDAO;
 
@@ -62,6 +66,14 @@ public class SynchService {
 		redmine.setObjectsPerPage(1000);
 	}
 
+	public String getDashboard() {
+		return dashboard;
+	}
+
+	public String getProject() {
+		return project;
+	}
+
 	@Transactional
 	public IssueCard getIssueCard(String cardId){
 		return issueCardDAO.getIssueCardByCard(cardId);
@@ -73,8 +85,12 @@ public class SynchService {
 	@Transactional
 	public Card createCard(Issue issue, String idList, String idBoard) {
 		Map<String, String> cardMap = new HashMap<String,String>();
+		String desc = String.format("%s/issues/%s\n%s", redmineUrl,issue.getId(), issue.getDescription());
+		if(desc.length() >= 16384){
+			desc = desc.substring(0, 16383);
+		}
 		cardMap.put("name",String.format("[%d]%s", issue.getId(), issue.getSubject()));
-		cardMap.put("desc",String.format("%s/issues/%s\n%s", redmineUrl,issue.getId(), issue.getDescription()));
+		cardMap.put("desc",desc);
 		Set<String> idLabels = new HashSet<String>();
 		ValueLabel valueLabel = null;
 		//Affect version as label
@@ -93,10 +109,14 @@ public class SynchService {
 		if(customFieldsIds != null){
 			CustomField customField = null;
 			for(String customFieldId : customFieldsIds){
-				customField = issue.getCustomFieldById(Integer.valueOf(customFieldId).intValue());
-				if(customField != null){
-					valueLabel = getValueLabel(customField.getValue(),idBoard);
-					idLabels.add(valueLabel.getLabelId());
+				try{
+					customField = issue.getCustomFieldById(Integer.valueOf(customFieldId).intValue());
+					if(customField != null){
+						valueLabel = getValueLabel(customField.getValue(),idBoard);
+						idLabels.add(valueLabel.getLabelId());
+					}
+				}catch(NumberFormatException e){
+					//TODO trace in debug the error
 				}
 			}
 		}
@@ -189,12 +209,15 @@ public class SynchService {
 		if(customFieldsIds != null){
 			CustomField customField = null;
 			for(String customFieldId : customFieldsIds){
-				customField = issue.getCustomFieldById(Integer.valueOf(customFieldId).intValue());
-				if(customField != null){
-					valueLabel = getValueLabel(customField.getValue(),idBoard);
-					if(!existingLabels.contains(valueLabel.getLabelId())){
-						idLabels.add(valueLabel.getLabelId());
+				try{
+					customField = issue.getCustomFieldById(Integer.valueOf(customFieldId).intValue());
+					if(customField != null){
+						valueLabel = getValueLabel(customField.getValue(),idBoard);
+						if(!existingLabels.contains(valueLabel.getLabelId())){
+							idLabels.add(valueLabel.getLabelId());
+						}
 					}
+				}catch(NumberFormatException e){
 				}
 			}
 		}
