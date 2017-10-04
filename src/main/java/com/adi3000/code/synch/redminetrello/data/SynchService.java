@@ -66,10 +66,15 @@ public class SynchService {
 		redmine.setObjectsPerPage(1000);
 	}
 
+	/**
+	* @return dashboard
+	*/
 	public String getDashboard() {
 		return dashboard;
 	}
-
+	/**
+	* @return project
+	*/
 	public String getProject() {
 		return project;
 	}
@@ -155,6 +160,11 @@ public class SynchService {
 		return sb.toString();
 	}
 
+	/**
+	* @param version
+	* @param boardId
+	* @return versionLabel
+	*/
 	private VersionLabel getVersionLabel(Version version, String boardId) {
 		VersionLabel versionLabel = versionLabelDAO.getVersionLabelByVersion(version.getId());
 		if(versionLabel == null){
